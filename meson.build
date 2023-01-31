@@ -11,6 +11,7 @@ project(
 c_args = [
     '-Wall',
     '-Wextra',
+    '-D_GNU_SOURCE',
 ]
 
 if get_option('buildtype') == 'plain'
@@ -28,6 +29,7 @@ app_src = [
     'devblock.c',
     'device.c',
     'main.c',
+    'printlog.c',
     'tvmnotify.c',
 ]
 
@@ -36,7 +38,12 @@ executable(
     c_args : c_args,
     dependencies : app_deps,
     sources : app_src,
-    install : false,
+    install : true,
+)
+
+install_data(
+    join_paths('data', meson.project_name() + '.desktop'),
+    install_dir: '/etc/xdg/autostart/'
 )
 
 

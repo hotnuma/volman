@@ -13,6 +13,7 @@ HEADERS += \
     context.h \
     devblock.h \
     device.h \
+    printlog.h \
     tvmnotify.h
 
 SOURCES = \
@@ -22,6 +23,7 @@ SOURCES = \
     devblock.c \
     device.c \
     main.c \
+    printlog.c \
     tvmnotify.c
 
 DISTFILES += \

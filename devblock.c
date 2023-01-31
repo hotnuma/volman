@@ -18,18 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <config.h>
-#include <devblock.h>
+#include "config.h"
+#include "devblock.h"
+
+#include "device.h"
+#include "tvmnotify.h"
+#include "printlog.h"
 
 #include <gtk/gtk.h>
-
-#include <sys/stat.h>
-#include <gio/gio.h>
-#include <gudev/gudev.h>
-#include <context.h>
-#include <device.h>
-#include <libnotify/notify.h>
-#include <tvmnotify.h>
 
 static gboolean _devblock_mount(gpointer user_data);
 static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
@@ -79,13 +75,7 @@ void device_block_added(TvmContext *context)
     }
     else
     {
-        /* generate an error for logging */
-        g_print("Unknown block device type \"%s\"\n", devtype);
-
-        //g_set_error (&context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-        //             _("Unknown block device type \"%s\""), devtype);
-
-        /* finish processing the device */
+        printinfo("Unknown block device type \"%s\"", devtype);
         device_cleanup(context);
     }
 }
@@ -103,7 +93,7 @@ static gboolean _devblock_mount(gpointer user_data)
     /* check if we have a volume */
     if (!volume)
     {
-        g_print("Could not detect the volume corresponding to the device\n");
+        printinfo("Could not detect the volume corresponding to the device");
         device_cleanup(context);
         return false;
     }
@@ -111,7 +101,7 @@ static gboolean _devblock_mount(gpointer user_data)
     /* check if we can mount the volume */
     if (!g_volume_can_mount(volume))
     {
-        g_print("Unable to mount the device\n");
+        printinfo("Unable to mount the device");
         device_cleanup(context);
         return false;
     }
@@ -191,13 +181,13 @@ static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
         else
         {
             /* could not locate the mount point */
-            g_set_error (&error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+            g_set_error(&error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
                          _("Unable to locate mount point"));
         }
     }
 
     /* release the volume */
-    g_object_unref (volume);
+    g_object_unref(volume);
 
     device_cleanup(context);
 }
@@ -255,10 +245,10 @@ static void _devblock_mounted(TvmContext *context, GMount *mount, GError **error
     }
 
     /* display the notification */
-    tvm_notify (icon, summary, message);
+    tvm_notify(icon, summary, message);
 
     /* clean up */
-    g_free (message);
+    g_free(message);
 
 #if 0
     GError *err = NULL;

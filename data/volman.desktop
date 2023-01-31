@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Volman
+Icon=application-x-executable
+StartupNotify=false
+Exec=volman
+Categories=System;Utility;Core;
+

@@ -2,17 +2,23 @@
 
 #include "context.h"
 #include "tvmnotify.h"
-//#include <gudev/gudev.h>
+#include "printlog.h"
+#include <gtk/gtk.h>
 
 static void _on_uevent(GUdevClient *client, const gchar *action,
                        GUdevDevice *device, void *param);
-int main()
+
+static const gchar *_subsystems[] = {"block", NULL};
+
+int main(int argc, char **argv)
 {
+    printinfo("Program started...");
+
+    gtk_init(&argc, &argv);
+
     g_set_application_name("Volman");
 
-    static const gchar *subsystems[] = {"block", NULL};
-
-    GUdevClient *client = g_udev_client_new(subsystems);
+    GUdevClient *client = g_udev_client_new(_subsystems);
 
     g_signal_connect(client, "uevent", G_CALLBACK(_on_uevent), NULL);
 
@@ -22,7 +28,7 @@ int main()
     g_object_unref(loop);
     g_object_unref(client);
 
-    tvm_notify_uninit ();
+    tvm_notify_uninit();
 
     return EXIT_SUCCESS;
 }
@@ -47,7 +53,7 @@ static void _on_uevent(GUdevClient *client, const gchar *action,
         || *syspath == '\0')
         return;
 
-    g_print("add %s\n", syspath);
+    printinfo("add %s", syspath);
 
     TvmContext *context = tvm_context_new(client, device);
 

@@ -22,6 +22,7 @@
 
 #include <context.h>
 #include <devblock.h>
+#include "printlog.h"
 
 typedef struct _DeviceHandler DeviceHandler;
 
@@ -76,12 +77,8 @@ void device_added(TvmContext *context)
     }
     else
     {
-        g_print("Device type \"%s\" not supported\n",
-                g_udev_device_get_property(context->device, "DEVNAME"));
-
-        //g_set_error(&context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-        //            _("Device type \"%s\" not supported"),
-        //            g_udev_device_get_property(context->device, "DEVNAME"));
+        printinfo("Device type \"%s\" not supported",
+                  g_udev_device_get_property(context->device, "DEVNAME"));
     }
 }
 
