@@ -40,23 +40,24 @@ static void _on_uevent(GUdevClient *client, const gchar *action,
     g_return_if_fail(action != NULL && *action != '\0');
     g_return_if_fail(G_UDEV_IS_DEVICE(device));
 
+    const gchar *subsystem = g_udev_device_get_subsystem(device);
+    g_return_if_fail(strcmp(subsystem, "block") == 0);
+
     UNUSED(param);
 
-    const gchar *subsystem = g_udev_device_get_subsystem(device);
     const gchar *devtype = g_udev_device_get_devtype(device);
-    const gchar *syspath = g_udev_device_get_sysfs_path(device);
+    const gchar *devfile = g_udev_device_get_device_file(device);
 
     if (strcmp(action, "add") != 0
-        || strcmp(subsystem, "block") != 0
-        || strcmp(devtype, "partition") != 0
-        || syspath == NULL
-        || *syspath == '\0')
+        || strcmp(devtype, "partition") != 0)
+    {
+        printinfo("%s : %s", action, devtype);
         return;
+    }
 
-    printinfo("add %s", syspath);
+    printinfo("%s : mount %s", action, devfile);
 
     TvmContext *context = tvm_context_new(client, device);
-
     g_idle_add(tvm_context_run, context);
 }
 

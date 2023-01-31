@@ -65,21 +65,26 @@ void device_added(TvmContext *context)
     for (gint n = G_N_ELEMENTS(subsystem_handlers) - 1; n >= 0; --n)
     {
         if (g_strcmp0(subsystem, subsystem_handlers[n].subsystem) == 0)
+        {
             context->handlers = g_list_prepend(context->handlers,
                                                &subsystem_handlers[n]);
+        }
     }
 
-    /* check if we have at least one handler */
-    if (context->handlers != NULL)
-    {
-        /* try the next handler in the list */
-        _device_next_handler(context);
-    }
-    else
+    if (!context->handlers)
     {
         printinfo("Device type \"%s\" not supported",
                   g_udev_device_get_property(context->device, "DEVNAME"));
+        return;
     }
+
+    int count = g_list_length(context->handlers);
+
+    if (count != 1)
+        printinfo("*** handlers count = %d", count);
+
+    /* try the next handler in the list */
+    _device_next_handler(context);
 }
 
 static void _device_next_handler(TvmContext *context)
