@@ -308,7 +308,7 @@ static gboolean tvm_block_device_autobrowse (TvmContext  *context,
         GMount      *mount,
         GError     **error);
 
-static TvmBlockDeviceHandler block_device_handlers[] =
+static DeviceBlockHandler block_device_handlers[] =
 {
     tvm_block_device_autoipod,
     tvm_block_device_autophoto,

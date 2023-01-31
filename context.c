@@ -37,7 +37,8 @@ TvmContext* tvm_context_new(GUdevClient *client, GUdevDevice *device)
     context->handlers = NULL;
     context->monitor = g_volume_monitor_get ();
 
-    context->error = NULL;
+    //context->error = NULL;
+
 
     return context;
 }
@@ -51,15 +52,16 @@ void tvm_context_free(TvmContext *context)
     g_list_free(context->handlers);
     g_object_unref(context->device);
     g_object_unref(context->client);
-    if (context->error)
-        g_error_free(context->error);
+
+    //if (context->error)
+    //    g_error_free(context->error);
 
     g_slice_free(TvmContext, context);
 }
 
 gboolean tvm_context_run(gpointer user_data)
 {
-    tvm_device_added((TvmContext*) user_data);
+    device_added((TvmContext*) user_data);
 
     return FALSE;
 }

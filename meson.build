@@ -23,10 +23,6 @@ app_deps = [
     dependency('libnotify'),
 ]
 
-#'tvm-gio-extensions.c',
-#'tvm-pango-extensions.c',
-#'tvm-prompt.c',
-
 app_src = [
     'context.c',
     'devblock.c',

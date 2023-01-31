@@ -29,8 +29,8 @@ G_BEGIN_DECLS
 typedef void (*DeviceHandlerFunc) (TvmContext *context);
 typedef void (*DeviceHandlerCallback) (TvmContext *context);
 
-void tvm_device_added(TvmContext *context);
-void tvm_device_handler_finished(TvmContext *context);
+void device_added(TvmContext *context);
+void device_cleanup(TvmContext *context);
 
 G_END_DECLS
 

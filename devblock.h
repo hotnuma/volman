@@ -17,18 +17,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __TVM_BLOCK_DEVICE_H__
-#define __TVM_BLOCK_DEVICE_H__
-
-#include <glib.h>
+#ifndef __DEVBLOCK_H__
+#define __DEVBLOCK_H__
 
 #include <context.h>
-#include <device.h>
 
-G_BEGIN_DECLS
+void device_block_added(TvmContext *context);
 
-void tvm_block_device_added (TvmContext *context);
+#endif // __DEVBLOCK_H__
 
-G_END_DECLS
 
-#endif /* !__TVM_BLOCK_DEVICE_H__ */

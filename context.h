@@ -32,13 +32,12 @@ struct _TvmContext
     GVolumeMonitor *monitor;
     GUdevClient    *client;
     GUdevDevice    *device;
-    GError         *error;
+    //GError         *error;
     GList          *handlers;
 };
 
 TvmContext* tvm_context_new(GUdevClient *client, GUdevDevice *device)
                             G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
 void        tvm_context_free(TvmContext *context);
 gboolean    tvm_context_run(gpointer user_data);
 

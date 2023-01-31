@@ -35,7 +35,7 @@ struct _DeviceHandler
 
 static DeviceHandler subsystem_handlers[] =
 {
-    {"block",       tvm_block_device_added},
+    {"block",       device_block_added},
 
 #if 0
     {"input",       tvm_input_device_added},
@@ -46,15 +46,15 @@ static DeviceHandler subsystem_handlers[] =
 
 };
 
-void tvm_device_added(TvmContext *context)
+void device_added(TvmContext *context)
 {
-    g_return_if_fail (context != NULL);
+    g_return_if_fail(context != NULL);
 
 #ifdef DEBUG
-    g_debug ("tvm_device_added:");
-    const gchar *const *keys = g_udev_device_get_property_keys (context->device);
+    g_debug("tvm_device_added:");
+    const gchar *const *keys = g_udev_device_get_property_keys(context->device);
     for (n = 0; keys != NULL && keys[n] != NULL; ++n)
-        g_debug ("    %s = %s", keys[n], g_udev_device_get_property (context->device, keys[n]));
+        g_debug("    %s = %s", keys[n], g_udev_device_get_property(context->device, keys[n]));
 #endif
 
     /* determine the subsystem to which the device belongs */
@@ -64,7 +64,8 @@ void tvm_device_added(TvmContext *context)
     for (gint n = G_N_ELEMENTS(subsystem_handlers) - 1; n >= 0; --n)
     {
         if (g_strcmp0(subsystem, subsystem_handlers[n].subsystem) == 0)
-            context->handlers = g_list_prepend(context->handlers, &subsystem_handlers[n]);
+            context->handlers = g_list_prepend(context->handlers,
+                                               &subsystem_handlers[n]);
     }
 
     /* check if we have at least one handler */
@@ -94,10 +95,11 @@ static void _device_next_handler(TvmContext *context)
     handler->func(context);
 }
 
-void tvm_device_handler_finished(TvmContext *context)
+void device_cleanup(TvmContext *context)
 {
     g_return_if_fail(context != NULL);
 
+#if 0
     if (context->error != NULL)
     {
         g_list_free(context->handlers);
@@ -107,6 +109,9 @@ void tvm_device_handler_finished(TvmContext *context)
         if (context->handlers != NULL)
             _device_next_handler(context);
     }
+#endif
+
+    tvm_context_free(context);
 }
 
 
