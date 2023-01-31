@@ -1,5 +1,19 @@
 #if 0
 
+
+GError *err = NULL;
+
+/* try block device handlers (iPod, cameras etc.) until one succeeds */
+for (n = 0; !success && err == NULL && n < G_N_ELEMENTS (block_device_handlers); ++n)
+    success = (block_device_handlers[n]) (context, mount, &err);
+
+/* forward errors to the caller */
+if (err != NULL)
+    g_propagate_error (error, err);
+
+
+// ----------------------------------------------------------------------------
+
 void
 tvm_block_device_added (TvmContext *context)
 {
@@ -243,7 +257,6 @@ static gboolean tvm_file_test               (GMount      *mount,
         const gchar *filename,
         GFileTest    test);
 
-
 static gboolean
 tvm_file_test (GMount      *mount,
                const gchar *filename,
@@ -292,7 +305,6 @@ tvm_file_test (GMount      *mount,
 
     return result;
 }
-
 
 static gboolean tvm_block_device_autophoto  (TvmContext  *context,
         GMount      *mount,
@@ -452,8 +464,6 @@ tvm_block_device_autoipod (TvmContext *context,
     return result;
 }
 
-
-
 static gboolean
 tvm_block_device_autophoto (TvmContext *context,
                             GMount     *mount,
@@ -506,8 +516,6 @@ tvm_block_device_autophoto (TvmContext *context,
 
     return result;
 }
-
-
 
 static gboolean
 tvm_block_device_autorun (TvmContext *context,
@@ -763,8 +771,6 @@ tvm_block_device_autorun (TvmContext *context,
     return FALSE;
 }
 
-
 #endif
-
 
 

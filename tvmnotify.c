@@ -19,7 +19,6 @@
 
 #include <config.h>
 #include <tvmnotify.h>
-
 #include <libnotify/notify.h>
 
 static gboolean tvm_notify_initted = FALSE;
@@ -101,12 +100,10 @@ tvm_notify_decode (const gchar *str)
     return result;
 }
 
-
-
-void
-tvm_notify_uninit (void)
+void tvm_notify_uninit()
 {
-    if (tvm_notify_initted
-            && notify_is_initted ())
-        notify_uninit ();
+    if (tvm_notify_initted && notify_is_initted())
+        notify_uninit();
 }
+
+

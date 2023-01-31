@@ -30,7 +30,7 @@
 static gboolean _devblock_mount(gpointer user_data);
 static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
                                    TvmContext *context);
-static void _devblock_mounted(TvmContext *context, GMount *mount, GError **error);
+static void _devblock_notify(TvmContext *context, GMount *mount, GError **error);
 
 GVolume* _volume_monitor_get_volume_for_kind(GVolumeMonitor *monitor,
                                              const gchar    *kind,
@@ -42,42 +42,32 @@ typedef gboolean (*DeviceBlockHandler) (TvmContext *context,
 
 void device_block_added(TvmContext *context)
 {
-    g_return_if_fail (context != NULL);
+    g_return_if_fail(context != NULL);
 
-    gboolean     automount;
-    /* collect general device information */
-    const gchar *devtype = g_udev_device_get_property(context->device, "DEVTYPE");
-    const gchar *id_fs_usage = g_udev_device_get_property(context->device, "ID_FS_USAGE");
+    // get device types
+    const gchar *devtype = g_udev_device_get_property(context->device,
+                                                      "DEVTYPE");
+    const gchar *id_fs_usage = g_udev_device_get_property(context->device,
+                                                          "ID_FS_USAGE");
 
-    /* distinguish device types */
-    gboolean     is_partition;
-    is_partition = (g_strcmp0 (devtype, "partition") == 0);
+    gboolean is_partition = (g_strcmp0(devtype, "partition") == 0);
 
-    gboolean     is_volume;
-    is_volume = (g_strcmp0 (devtype, "disk") == 0)
-                && (g_strcmp0 (id_fs_usage, "filesystem") == 0);
+    gboolean is_volume = (g_strcmp0(devtype, "disk") == 0)
+                          && (g_strcmp0(id_fs_usage, "filesystem") == 0);
 
-    if (is_partition || is_volume)
-    {
-        /* check if automounting drives is enabled */
-        automount = true;
-
-        if (automount)
-        {
-            /* mount the partition and continue with inspecting its contents */
-            g_timeout_add_seconds(5, _devblock_mount, context);
-        }
-        else
-        {
-            /* finish processing the device */
-            device_cleanup (context);
-        }
-    }
-    else
+    if (!is_partition && !is_volume)
     {
         printinfo("Unknown block device type \"%s\"", devtype);
         device_cleanup(context);
+        return;
     }
+
+    guint delay = 5;
+
+    if (is_partition)
+        delay = 2;
+
+    g_timeout_add_seconds(delay, _devblock_mount, context);
 }
 
 static gboolean _devblock_mount(gpointer user_data)
@@ -125,32 +115,30 @@ GVolume* _volume_monitor_get_volume_for_kind(GVolumeMonitor *monitor,
                                              const gchar    *kind,
                                              const gchar    *identifier)
 {
+    g_return_val_if_fail(G_IS_VOLUME_MONITOR (monitor), NULL);
+    g_return_val_if_fail(kind != NULL && *kind != '\0', NULL);
+    g_return_val_if_fail(identifier != NULL && *identifier != '\0', NULL);
+
+    GList *volumes = g_volume_monitor_get_volumes (monitor);
+
     GVolume *volume = NULL;
-    GList   *volumes;
-    GList   *lp;
-    gchar   *value;
 
-    g_return_val_if_fail (G_IS_VOLUME_MONITOR (monitor), NULL);
-    g_return_val_if_fail (kind != NULL && *kind != '\0', NULL);
-    g_return_val_if_fail (identifier != NULL && *identifier != '\0', NULL);
-
-    volumes = g_volume_monitor_get_volumes (monitor);
-
-    for (lp = volumes; volume == NULL && lp != NULL; lp = lp->next)
+    for (GList *lp = volumes; volume == NULL && lp != NULL; lp = lp->next)
     {
-        value = g_volume_get_identifier (lp->data, kind);
+        gchar *value = g_volume_get_identifier(lp->data, kind);
+
         if (value != NULL)
         {
-            if (g_strcmp0 (value, identifier) == 0)
-                volume = g_object_ref (lp->data);
+            if (g_strcmp0(value, identifier) == 0)
+                volume = g_object_ref(lp->data);
 
-            g_free (value);
+            g_free(value);
         }
 
-        g_object_unref (lp->data);
+        g_object_unref(lp->data);
     }
 
-    g_list_free (volumes);
+    g_list_free(volumes);
 
     return volume;
 }
@@ -158,9 +146,9 @@ GVolume* _volume_monitor_get_volume_for_kind(GVolumeMonitor *monitor,
 static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
                                    TvmContext *context)
 {
-    g_return_if_fail (G_IS_VOLUME (volume));
-    g_return_if_fail (G_IS_ASYNC_RESULT (result));
-    g_return_if_fail (context != NULL);
+    g_return_if_fail(G_IS_VOLUME (volume));
+    g_return_if_fail(G_IS_ASYNC_RESULT (result));
+    g_return_if_fail(context != NULL);
 
     GError *error = NULL;
 
@@ -173,7 +161,7 @@ static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
         if (mount != NULL)
         {
             /* inspect volume contents and perform actions based on them */
-            _devblock_mounted (context, mount, &error);
+            _devblock_notify (context, mount, &error);
 
             /* release the mount point */
             g_object_unref (mount);
@@ -192,7 +180,7 @@ static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
     device_cleanup(context);
 }
 
-static void _devblock_mounted(TvmContext *context, GMount *mount, GError **error)
+static void _devblock_notify(TvmContext *context, GMount *mount, GError **error)
 {
     g_return_if_fail (context != NULL);
     g_return_if_fail (G_IS_MOUNT (mount));
@@ -249,19 +237,6 @@ static void _devblock_mounted(TvmContext *context, GMount *mount, GError **error
 
     /* clean up */
     g_free(message);
-
-#if 0
-    GError *err = NULL;
-
-    /* try block device handlers (iPod, cameras etc.) until one succeeds */
-    for (n = 0; !success && err == NULL && n < G_N_ELEMENTS (block_device_handlers); ++n)
-        success = (block_device_handlers[n]) (context, mount, &err);
-
-    /* forward errors to the caller */
-    if (err != NULL)
-        g_propagate_error (error, err);
-#endif
-
 }
 
 
