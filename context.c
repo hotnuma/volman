@@ -18,31 +18,26 @@
  */
 
 #include <config.h>
-#include <tvm-context.h>
+#include <context.h>
 
 #include <glib.h>
 #include <gio/gio.h>
 #include <gudev/gudev.h>
-#include <tvm-device.h>
+#include <device.h>
 
-TvmContext* tvm_context_new(GUdevClient *client,
-                            GUdevDevice *device,
-                            GMainLoop   *loop,
-                            GError      **error)
+TvmContext* tvm_context_new(GUdevClient *client, GUdevDevice *device)
 {
     g_return_val_if_fail (G_UDEV_IS_CLIENT (client), NULL);
     g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
-    g_return_val_if_fail (loop != NULL, NULL);
-    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
     TvmContext *context = g_slice_new0(TvmContext);
 
     context->client = g_object_ref (client);
     context->device = g_object_ref (device);
-    context->error = error;
-    context->loop = g_main_loop_ref (loop);
     context->handlers = NULL;
     context->monitor = g_volume_monitor_get ();
+
+    context->error = NULL;
 
     return context;
 }
@@ -52,21 +47,21 @@ void tvm_context_free(TvmContext *context)
     if (context == NULL)
         return;
 
-    g_main_loop_unref (context->loop);
+    g_object_unref(context->monitor);
+    g_list_free(context->handlers);
+    g_object_unref(context->device);
+    g_object_unref(context->client);
+    if (context->error)
+        g_error_free(context->error);
 
-    g_list_free (context->handlers);
-
-    g_object_unref (context->monitor);
-    g_object_unref (context->device);
-    g_object_unref (context->client);
-
-    g_slice_free (TvmContext, context);
+    g_slice_free(TvmContext, context);
 }
 
 gboolean tvm_context_run(gpointer user_data)
 {
-    TvmContext *context = user_data;
-    tvm_device_added(context);
+    tvm_device_added((TvmContext*) user_data);
 
     return FALSE;
 }
+
+

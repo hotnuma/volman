@@ -22,11 +22,10 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <gtk/gtk.h>
 #include <gudev/gudev.h>
-#include <tvm-notify.h>
-#include <tvm-context.h>
-#include <tvm-device.h>
+#include <tvmnotify.h>
+#include <context.h>
+#include <device.h>
 
 //#include <libxfce4util/libxfce4util.h>
 //#include <xfconf/xfconf.h>
@@ -52,25 +51,16 @@ static const gchar *supported_udev_subsystems[] =
 
 int main(int argc, char **argv)
 {
-    GUdevClient   *client;
-    GUdevDevice   *device;
-    TvmContext    *context = NULL;
-    GMainLoop     *loop = NULL;
-    GError        *error = NULL;
-    gint           exit_code = EXIT_SUCCESS;
-
-    /* setup translation domain */
-    //xfce_textdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
-
     /* setup application name */
-    g_set_application_name (_("Volman"));
+    g_set_application_name("Volman");
 
 #ifdef G_ENABLE_DEBUG
     /* Do NOT remove this line for now. If something doesn't work, fix your code instead */
-    g_log_set_always_fatal (G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING);
+    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING);
 #endif
 
-    /* initialize GTK+ */
+    GError *error = NULL;
+
     if (!gtk_init_with_args(&argc, &argv, NULL,
                             option_entries, NULL /*GETTEXT_PACKAGE*/, &error))
     {
@@ -79,13 +69,17 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    GMainLoop *loop = NULL;
+    gint exit_code = EXIT_SUCCESS;
+
     if (opt_sysfs_path != NULL)
     {
         /* create an udev client */
-        client = g_udev_client_new (supported_udev_subsystems);
+        GUdevClient *client = g_udev_client_new(supported_udev_subsystems);
 
         /* determine the device belonging to the sysfs path */
-        device = g_udev_client_query_by_sysfs_path (client, opt_sysfs_path);
+        GUdevDevice *device = g_udev_client_query_by_sysfs_path(client,
+                                                                opt_sysfs_path);
 
         if (device != NULL)
         {
@@ -96,7 +90,8 @@ int main(int argc, char **argv)
             loop = g_main_loop_new (NULL, FALSE);
 
             /* allocate a new TvmContext */
-            context = tvm_context_new (client, device, loop, &error);
+            TvmContext    *context = NULL;
+            context = tvm_context_new (client, device);
 
             /* handle the new device in an idle handler */
             g_idle_add (tvm_context_run, context);
@@ -136,16 +131,11 @@ int main(int argc, char **argv)
         exit_code = EXIT_FAILURE;
     }
 
-#ifdef HAVE_LIBNOTIFY
     tvm_notify_uninit ();
-#endif
 
     /* release the device context */
     if (context != NULL)
         tvm_context_free (context);
-
-    /* free xfconf resources */
-    //xfconf_shutdown ();
 
     return exit_code;
 }

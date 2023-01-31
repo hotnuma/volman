@@ -17,36 +17,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __TVM_CONTEXT_H__
-#define __TVM_CONTEXT_H__
+#ifndef __TVM_GIO_EXTENSIONS_H__
+#define __TVM_GIO_EXTENSIONS_H__
 
 #include <gio/gio.h>
-#include <gudev/gudev.h>
 
 G_BEGIN_DECLS
 
-typedef struct _TvmContext TvmContext;
-
-TvmContext *tvm_context_new(GUdevClient   *client,
-                                   GUdevDevice   *device,
-                                   GMainLoop     *loop,
-                                   GError       **error) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-void        tvm_context_free(TvmContext    *context);
-gboolean    tvm_context_run(gpointer       user_data);
-
-
-
-struct _TvmContext 
-{
-  GVolumeMonitor *monitor;
-  GUdevClient    *client;
-  GUdevDevice    *device;
-  GMainLoop      *loop;
-  GError        **error;
-  GList          *handlers;
-};
 
 G_END_DECLS
 
-#endif /* !__TVM_CONTEXT_H__ */
+#endif /* !__TVM_GIO_EXTENSIONS_H__ */

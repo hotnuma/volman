@@ -1,5 +1,6 @@
 /*-
- * Copyright (c) 2010 Jannis Pohlmann <>
+ * Copyright (c) 2007 Benedikt Meurer <benny@xfce.org>
+ * Copyright (c) 2010 Jannis Pohlmann <jannis@xfce.org>
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU General Public License as
@@ -17,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __TVM_DEVICE_H__
-#define __TVM_DEVICE_H__
+#ifndef __TVM_PROMPT_H__
+#define __TVM_PROMPT_H__
 
 #include <glib.h>
 
@@ -26,17 +27,6 @@
 
 G_BEGIN_DECLS
 
-/* callback function type for device handlers */
-typedef void (*TvmDeviceHandlerCallback) (TvmContext *context);
-
-/* function type for device handlers */
-typedef void (*TvmDeviceHandlerFunc) (TvmContext *context);
-
-
-
-void tvm_device_added            (TvmContext *context);
-void tvm_device_handler_finished (TvmContext *context);
-
 G_END_DECLS
 
-#endif /* !__TVM_DEVICE_H__ */
+#endif /* !__TVM_PROMPT_H__ */

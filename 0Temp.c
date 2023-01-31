@@ -1,5 +1,244 @@
 #if 0
 
+void
+tvm_block_device_added (TvmContext *context)
+{
+#if 0
+    GError      *error = NULL;
+    gint         response;
+
+    const gchar *media_state;
+    gboolean     autoplay;
+    guint64      audio_tracks;
+    guint64      data_tracks;
+
+    gboolean     is_cdrom;
+    is_cdrom = (g_strcmp0 (id_type, "cd") == 0);
+
+    const gchar *id_type;
+    id_type = g_udev_device_get_property (context->device, "ID_TYPE");
+
+    if (is_cdrom)
+    {
+        /* silently ignore CD drives without media */
+        if (g_udev_device_get_property_as_boolean (context->device, "ID_CDROM_MEDIA"))
+        {
+            /* collect CD information */
+            media_state = g_udev_device_get_property (context->device,
+                          "ID_CDROM_MEDIA_STATE");
+            data_tracks =
+                g_udev_device_get_property_as_uint64 (context->device,
+                        "ID_CDROM_MEDIA_TRACK_COUNT_DATA");
+            audio_tracks =
+                g_udev_device_get_property_as_uint64 (context->device,
+                        "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO");
+
+            /* check if we have a blank CD/DVD here */
+            if (g_strcmp0 (media_state, "blank") == 0)
+            {
+                /* try to run the burn program */
+                if (!tvm_run_burn_software (context, &error))
+                    g_propagate_error (context->error, error);
+
+                /* finish processing the device */
+                tvm_device_handler_finished (context);
+            }
+            else if (audio_tracks > 0 && data_tracks > 0)
+            {
+                /* check if both autoplay and automounting of CDs/DVDs is enabled */
+                automount = true; /* xfconf_channel_get_bool (context->channel,
+                                                     "/automount-media/enabled", FALSE);*/
+
+                autoplay = false; /*xfconf_channel_get_bool (context->channel,
+                                                    "/autoplay-audio-cds/enabled", FALSE);*/
+                if (automount && autoplay)
+                {
+                    /* ask what to do with the mixed audio/data disc */
+                    response = tvm_prompt (context, "gnome-dev-cdrom-audio",
+                                           _("Audio/Data CD"),
+                                           _("The CD in the drive contains both music "
+                                             "and files"),
+                                           _("Would you like to listen to music or "
+                                             "browse the files?"),
+                                           _("Ig_nore"), GTK_RESPONSE_CANCEL,
+                                           _("_Browse Files"), TVM_RESPONSE_BROWSE,
+                                           _("_Play CD"), TVM_RESPONSE_PLAY,
+                                           NULL);
+
+                    switch (response)
+                    {
+                    case TVM_RESPONSE_PLAY:
+                        goto autoplay_disc;
+                        break;
+
+                    case TVM_RESPONSE_BROWSE:
+                        goto automount_disc;
+                        break;
+
+                    default:
+                        /* finish processing the device */
+                        tvm_device_handler_finished (context);
+                        break;
+                    }
+                }
+                else if (automount)
+                {
+                    /* just mount the disc automatically */
+                    goto automount_disc;
+                }
+                else if (autoplay)
+                {
+                    /* just play the disc automatically */
+                    goto autoplay_disc;
+                }
+                else
+                {
+                    /* finish processing the device */
+                    tvm_device_handler_finished (context);
+                }
+            }
+            else if (audio_tracks > 0)
+            {
+autoplay_disc:
+                /* open the audio CD in the favorite CD player */
+                tvm_run_cd_player (context, context->error);
+
+                /* finish processing the device */
+                tvm_device_handler_finished (context);
+            }
+            else if (data_tracks > 0)
+            {
+automount_disc:
+                /* check if automounting media is enabled */
+                automount = xfconf_channel_get_bool (context->channel,
+                                                     "/automount-media/enabled", FALSE);
+                if (automount)
+                {
+                    /* mount the CD/DVD and continue with inspecting its contents */
+                    g_timeout_add_seconds(5, tvm_block_device_mount, context);
+                }
+            }
+            else
+            {
+                /* finish processing the device */
+                tvm_device_handler_finished (context);
+            }
+        }
+        else
+        {
+            /* finish processing the device */
+            tvm_device_handler_finished (context);
+        }
+    }
+    else
+
+#endif
+
+    g_return_if_fail (context != NULL);
+
+    gboolean     automount;
+    /* collect general device information */
+    const gchar *devtype;
+    devtype = g_udev_device_get_property (context->device, "DEVTYPE");
+    const gchar *id_fs_usage;
+    id_fs_usage = g_udev_device_get_property (context->device, "ID_FS_USAGE");
+
+    /* distinguish device types */
+    gboolean     is_partition;
+    is_partition = (g_strcmp0 (devtype, "partition") == 0);
+
+    gboolean     is_volume;
+    is_volume = (g_strcmp0 (devtype, "disk") == 0)
+                && (g_strcmp0 (id_fs_usage, "filesystem") == 0);
+
+    if (is_partition || is_volume)
+    {
+        /* check if automounting drives is enabled */
+        automount = true; /*xfconf_channel_get_bool (context->channel, "/automount-drives/enabled",
+                                             FALSE);*/
+        if (automount)
+        {
+            /* mount the partition and continue with inspecting its contents */
+            g_timeout_add_seconds(5, tvm_block_device_mount, context);
+        }
+        else
+        {
+            /* finish processing the device */
+            tvm_device_handler_finished (context);
+        }
+    }
+    else
+    {
+        /* generate an error for logging */
+        g_set_error (context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+                     _("Unknown block device type \"%s\""), devtype);
+
+        /* finish processing the device */
+        tvm_device_handler_finished (context);
+    }
+}
+
+static void _on_uevent_debug(GUdevClient *client, const gchar *action, GUdevDevice *device,
+                       void *param)
+{
+    g_return_if_fail(G_UDEV_IS_CLIENT(client));
+    g_return_if_fail(action != NULL && *action != '\0');
+    g_return_if_fail(G_UDEV_IS_DEVICE(device));
+
+    g_print("action: %s\n", action);
+    g_print("--------------------------------------------------------\n");
+    const gchar *val;
+    gchar valc;
+
+    val = g_udev_device_get_name(device);
+    if (val && *val != '\0')
+        g_print("name: %s\n", val);
+
+    val = g_udev_device_get_sysfs_path(device);
+    if (val && *val != '\0')
+        g_print("sysfs: %s\n", val);
+
+    val = g_udev_device_get_subsystem(device);
+    if (val && *val != '\0')
+        g_print("subsystem: %s\n", val);
+
+    val = g_udev_device_get_devtype(device);
+    if (val && *val != '\0')
+        g_print("devtype: %s\n", val);
+
+    valc = g_udev_device_get_device_type(device);
+    if (valc != '\0')
+        g_print("device type: %c\n", valc);
+
+    val = g_udev_device_get_device_file(device);
+    if (val && *val != '\0')
+        g_print("device file: %s\n", val);
+
+    val = g_udev_device_get_driver(device);
+    if (val && *val != '\0')
+        g_print("driver: %s\n", val);
+
+    const gchar *const *symlinks = g_udev_device_get_device_file_symlinks(device);
+    for (int j = 0; symlinks[j] != NULL; ++j)
+    {
+        val = symlinks[j];
+
+        if (val && *val != '\0')
+            g_print("    symlink: %s\n", val);
+    }
+
+    const gchar * const * tags = g_udev_device_get_tags(device);
+    for (int j = 0; tags[j] != NULL; ++j)
+    {
+        val = tags[j];
+
+        if (val && *val != '\0')
+            g_print("    tag: %s\n", val);
+    }
+
+    g_print("\n\n");
+}
+
 static gboolean tvm_file_test               (GMount      *mount,
         const gchar *filename,
         GFileTest    test);

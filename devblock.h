@@ -17,17 +17,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __TVM_GIO_EXTENSIONS_H__
-#define __TVM_GIO_EXTENSIONS_H__
+#ifndef __TVM_BLOCK_DEVICE_H__
+#define __TVM_BLOCK_DEVICE_H__
 
-#include <gio/gio.h>
+#include <glib.h>
+
+#include <context.h>
+#include <device.h>
 
 G_BEGIN_DECLS
 
-GVolume *tvm_g_volume_monitor_get_volume_for_kind (GVolumeMonitor *monitor,
-                                                   const gchar    *kind,
-                                                   const gchar    *identifier);
+void tvm_block_device_added (TvmContext *context);
 
 G_END_DECLS
 
-#endif /* !__TVM_GIO_EXTENSIONS_H__ */
+#endif /* !__TVM_BLOCK_DEVICE_H__ */

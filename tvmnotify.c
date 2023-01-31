@@ -18,25 +18,13 @@
  */
 
 #include <config.h>
-
-#include <glib.h>
+#include <tvmnotify.h>
 
 #include <libnotify/notify.h>
 
-//#include <libxfce4util/libxfce4util.h>
-
-#include <tvm-notify.h>
-
-
-
 static gboolean tvm_notify_initted = FALSE;
 
-
-
-void
-tvm_notify (const gchar *icon,
-            const gchar *summary,
-            const gchar *message)
+void tvm_notify(const gchar *icon, const gchar *summary, const gchar *message)
 {
     NotifyNotification *notification;
     gchar              *spec_version = NULL;
@@ -64,24 +52,22 @@ tvm_notify (const gchar *icon,
 
 #ifdef NOTIFY_CHECK_VERSION
 #if NOTIFY_CHECK_VERSION (0, 7, 0)
-    notification = notify_notification_new (summary, message, icon);
+    notification = notify_notification_new(summary, message, icon);
 #else
-    notification = notify_notification_new (summary, message, icon, NULL);
+    notification = notify_notification_new(summary, message, icon, NULL);
 #endif
 #else
-    notification = notify_notification_new (summary, message, icon, NULL);
+    notification = notify_notification_new(summary, message, icon, NULL);
 #endif
     /* don't log notification (yes, the logic seems inverted but it's right) */
-    notify_notification_set_hint (notification, "transient", g_variant_new_boolean (FALSE));
-    notify_notification_set_urgency (notification, NOTIFY_URGENCY_NORMAL);
-    notify_notification_set_timeout (notification, NOTIFY_EXPIRES_DEFAULT);
-    notify_notification_show (notification, NULL);
-    g_object_unref (notification);
+    notify_notification_set_hint(notification, "transient", g_variant_new_boolean (FALSE));
+    notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
+    notify_notification_set_timeout(notification, NOTIFY_EXPIRES_DEFAULT);
+    notify_notification_show(notification, NULL);
+    g_object_unref(notification);
 }
 
-
-
-gchar *
+gchar*
 tvm_notify_decode (const gchar *str)
 {
     GString     *string;

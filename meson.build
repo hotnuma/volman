@@ -17,33 +17,22 @@ if get_option('buildtype') == 'plain'
   c_args += '-O2'
 endif
 
-# examples
-#dependency('dbus-1'),
-#dependency('libxml-2.0'),
-#dependency('tinyc'),
-#dependency('libpcre'),
-#dependency('glib-2.0'),
-#dependency('gio-2.0'),
-
 app_deps = [
     dependency('gtk+-3.0'),
     dependency('gudev-1.0'),
     dependency('libnotify'),
 ]
 
-#'tvm-input-device.c',
-#'tvm-usb-device.c',
-#'tvm-run.c',
+#'tvm-gio-extensions.c',
+#'tvm-pango-extensions.c',
+#'tvm-prompt.c',
 
 app_src = [
+    'context.c',
+    'devblock.c',
+    'device.c',
     'main.c',
-    'tvm-block-device.c',
-    'tvm-context.c',
-    'tvm-device.c',
-    'tvm-gio-extensions.c',
-    'tvm-notify.c',
-    'tvm-pango-extensions.c',
-    'tvm-prompt.c',
+    'tvmnotify.c',
 ]
 
 executable(

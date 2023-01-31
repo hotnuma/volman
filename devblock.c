@@ -19,24 +19,21 @@
  */
 
 #include <config.h>
-#include <tvm-block-device.h>
+#include <devblock.h>
+
+#include <gtk/gtk.h>
 
 #include <sys/stat.h>
 #include <gio/gio.h>
-#include <gtk/gtk.h>
 #include <gudev/gudev.h>
-#include <tvm-context.h>
-#include <tvm-device.h>
-#include <tvm-gio-extensions.h>
-#include <tvm-prompt.h>
-
-//#include <tvm-run.h>
-//#include <libxfce4util/libxfce4util.h>
-
-#ifdef HAVE_LIBNOTIFY
+#include <context.h>
+#include <device.h>
 #include <libnotify/notify.h>
-#include <tvm-notify.h>
-#endif
+#include <tvmnotify.h>
+
+GVolume *tvm_g_volume_monitor_get_volume_for_kind(GVolumeMonitor *monitor,
+                                                  const gchar    *kind,
+                                                  const gchar    *identifier);
 
 typedef gboolean (*TvmBlockDeviceHandler) (TvmContext *context,
                                            GMount     *mount,
@@ -54,7 +51,6 @@ static void tvm_block_device_mounted(TvmContext *context, GMount *mount,
 
     GError      *err = NULL;
 
-#ifdef HAVE_LIBNOTIFY
 
     const gchar *summary;
     const gchar *icon;
@@ -110,7 +106,6 @@ static void tvm_block_device_mounted(TvmContext *context, GMount *mount,
     /* clean up */
     g_free (message);
 
-#endif
 
 #if 0
     /* try block device handlers (iPod, cameras etc.) until one succeeds */
@@ -123,12 +118,8 @@ static void tvm_block_device_mounted(TvmContext *context, GMount *mount,
         g_propagate_error (error, err);
 }
 
-
-
-static void
-tvm_block_device_mount_finish (GVolume      *volume,
-                               GAsyncResult *result,
-                               TvmContext   *context)
+static void tvm_block_device_mount_finish(GVolume *volume, GAsyncResult *result,
+                                          TvmContext *context)
 {
     GMount *mount;
     GError *error = NULL;
@@ -163,17 +154,15 @@ tvm_block_device_mount_finish (GVolume      *volume,
     g_object_unref (volume);
 
     /* move error information into the context */
-    if (error != NULL)
-        g_propagate_error (context->error, error);
+    //if (error != NULL)
+    //    g_propagate_error(&context->error, error);
 
     /* finish processing the device */
+
     tvm_device_handler_finished (context);
 }
 
-
-
-static gboolean
-tvm_block_device_mount (gpointer user_data)
+static gboolean tvm_block_device_mount (gpointer user_data)
 {
     TvmContext      *context = user_data;
     GMountOperation *mount_operation;
@@ -199,168 +188,68 @@ tvm_block_device_mount (gpointer user_data)
         }
         else
         {
-            g_set_error (context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+            g_set_error(&context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
                          _("Unable to mount the device"));
 
             /* finish processing the device */
-            tvm_device_handler_finished (context);
+            tvm_device_handler_finished(context);
         }
     }
     else
     {
-        g_set_error (context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+        g_set_error(&context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
                      _("Could not detect the volume corresponding to the device"));
 
         /* finish processing the device */
         tvm_device_handler_finished (context);
     }
+
     return FALSE;
 }
 
-
-
-void
-tvm_block_device_added (TvmContext *context)
+GVolume *
+tvm_g_volume_monitor_get_volume_for_kind (GVolumeMonitor *monitor,
+        const gchar    *kind,
+        const gchar    *identifier)
 {
-#if 0
-    GError      *error = NULL;
-    gint         response;
+    GVolume *volume = NULL;
+    GList   *volumes;
+    GList   *lp;
+    gchar   *value;
 
-    const gchar *media_state;
-    gboolean     autoplay;
-    guint64      audio_tracks;
-    guint64      data_tracks;
+    g_return_val_if_fail (G_IS_VOLUME_MONITOR (monitor), NULL);
+    g_return_val_if_fail (kind != NULL && *kind != '\0', NULL);
+    g_return_val_if_fail (identifier != NULL && *identifier != '\0', NULL);
 
-    gboolean     is_cdrom;
-    is_cdrom = (g_strcmp0 (id_type, "cd") == 0);
+    volumes = g_volume_monitor_get_volumes (monitor);
 
-    const gchar *id_type;
-    id_type = g_udev_device_get_property (context->device, "ID_TYPE");
-
-    if (is_cdrom)
+    for (lp = volumes; volume == NULL && lp != NULL; lp = lp->next)
     {
-        /* silently ignore CD drives without media */
-        if (g_udev_device_get_property_as_boolean (context->device, "ID_CDROM_MEDIA"))
+        value = g_volume_get_identifier (lp->data, kind);
+        if (value != NULL)
         {
-            /* collect CD information */
-            media_state = g_udev_device_get_property (context->device,
-                          "ID_CDROM_MEDIA_STATE");
-            data_tracks =
-                g_udev_device_get_property_as_uint64 (context->device,
-                        "ID_CDROM_MEDIA_TRACK_COUNT_DATA");
-            audio_tracks =
-                g_udev_device_get_property_as_uint64 (context->device,
-                        "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO");
+            if (g_strcmp0 (value, identifier) == 0)
+                volume = g_object_ref (lp->data);
 
-            /* check if we have a blank CD/DVD here */
-            if (g_strcmp0 (media_state, "blank") == 0)
-            {
-                /* try to run the burn program */
-                if (!tvm_run_burn_software (context, &error))
-                    g_propagate_error (context->error, error);
-
-                /* finish processing the device */
-                tvm_device_handler_finished (context);
-            }
-            else if (audio_tracks > 0 && data_tracks > 0)
-            {
-                /* check if both autoplay and automounting of CDs/DVDs is enabled */
-                automount = true; /* xfconf_channel_get_bool (context->channel,
-                                                     "/automount-media/enabled", FALSE);*/
-
-                autoplay = false; /*xfconf_channel_get_bool (context->channel,
-                                                    "/autoplay-audio-cds/enabled", FALSE);*/
-                if (automount && autoplay)
-                {
-                    /* ask what to do with the mixed audio/data disc */
-                    response = tvm_prompt (context, "gnome-dev-cdrom-audio",
-                                           _("Audio/Data CD"),
-                                           _("The CD in the drive contains both music "
-                                             "and files"),
-                                           _("Would you like to listen to music or "
-                                             "browse the files?"),
-                                           _("Ig_nore"), GTK_RESPONSE_CANCEL,
-                                           _("_Browse Files"), TVM_RESPONSE_BROWSE,
-                                           _("_Play CD"), TVM_RESPONSE_PLAY,
-                                           NULL);
-
-                    switch (response)
-                    {
-                    case TVM_RESPONSE_PLAY:
-                        goto autoplay_disc;
-                        break;
-
-                    case TVM_RESPONSE_BROWSE:
-                        goto automount_disc;
-                        break;
-
-                    default:
-                        /* finish processing the device */
-                        tvm_device_handler_finished (context);
-                        break;
-                    }
-                }
-                else if (automount)
-                {
-                    /* just mount the disc automatically */
-                    goto automount_disc;
-                }
-                else if (autoplay)
-                {
-                    /* just play the disc automatically */
-                    goto autoplay_disc;
-                }
-                else
-                {
-                    /* finish processing the device */
-                    tvm_device_handler_finished (context);
-                }
-            }
-            else if (audio_tracks > 0)
-            {
-autoplay_disc:
-                /* open the audio CD in the favorite CD player */
-                tvm_run_cd_player (context, context->error);
-
-                /* finish processing the device */
-                tvm_device_handler_finished (context);
-            }
-            else if (data_tracks > 0)
-            {
-automount_disc:
-                /* check if automounting media is enabled */
-                automount = xfconf_channel_get_bool (context->channel,
-                                                     "/automount-media/enabled", FALSE);
-                if (automount)
-                {
-                    /* mount the CD/DVD and continue with inspecting its contents */
-                    g_timeout_add_seconds(5, tvm_block_device_mount, context);
-                }
-            }
-            else
-            {
-                /* finish processing the device */
-                tvm_device_handler_finished (context);
-            }
+            g_free (value);
         }
-        else
-        {
-            /* finish processing the device */
-            tvm_device_handler_finished (context);
-        }
+
+        g_object_unref (lp->data);
     }
-    else
 
-#endif
+    g_list_free (volumes);
 
+    return volume;
+}
+
+void tvm_block_device_added(TvmContext *context)
+{
     g_return_if_fail (context != NULL);
 
     gboolean     automount;
     /* collect general device information */
-    const gchar *devtype;
-    devtype = g_udev_device_get_property (context->device, "DEVTYPE");
-    const gchar *id_fs_usage;
-    id_fs_usage = g_udev_device_get_property (context->device, "ID_FS_USAGE");
+    const gchar *devtype = g_udev_device_get_property(context->device, "DEVTYPE");
+    const gchar *id_fs_usage = g_udev_device_get_property(context->device, "ID_FS_USAGE");
 
     /* distinguish device types */
     gboolean     is_partition;
@@ -389,7 +278,7 @@ automount_disc:
     else
     {
         /* generate an error for logging */
-        g_set_error (context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+        g_set_error (&context->error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
                      _("Unknown block device type \"%s\""), devtype);
 
         /* finish processing the device */

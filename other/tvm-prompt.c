@@ -33,6 +33,7 @@
 #include <tvm-prompt.h>
 
 
+#if 0
 
 static void
 tvm_prompt_uevent (GUdevClient *client,
@@ -68,6 +69,25 @@ tvm_prompt_uevent (GUdevClient *client,
 }
 
 
+enum
+{
+  TVM_RESPONSE_NONE,
+  TVM_RESPONSE_PLAY,
+  TVM_RESPONSE_MUSIC,
+  TVM_RESPONSE_BROWSE,
+  TVM_RESPONSE_PHOTOS,
+  TVM_RESPONSE_AUTORUN,
+  TVM_RESPONSE_BURN_DATA_CD,
+  TVM_RESPONSE_BURN_AUDIO_CD,
+};
+
+gint tvm_prompt (TvmContext  *context,
+                 const gchar *icon,
+                 const gchar *title,
+                 const gchar *primary_text,
+                 const gchar *secondary_text,
+                 const gchar *first_button_text,
+                 ...) G_GNUC_NULL_TERMINATED;
 
 gint
 tvm_prompt (TvmContext  *context,
@@ -169,3 +189,5 @@ tvm_prompt (TvmContext  *context,
 
     return response;
 }
+
+#endif

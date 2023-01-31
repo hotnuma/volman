@@ -1,6 +1,5 @@
 /*-
- * Copyright (c) 2007 Benedikt Meurer <benny@xfce.org>
- * Copyright (c) 2010 Jannis Pohlmann <jannis@xfce.org>
+ * Copyright (c) 2010 Jannis Pohlmann <>
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU General Public License as
@@ -18,35 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __TVM_PROMPT_H__
-#define __TVM_PROMPT_H__
+#ifndef __TVM_DEVICE_H__
+#define __TVM_DEVICE_H__
 
 #include <glib.h>
 
-#include <tvm-context.h>
+#include <context.h>
 
 G_BEGIN_DECLS
 
-enum
-{
-  TVM_RESPONSE_NONE,
-  TVM_RESPONSE_PLAY,
-  TVM_RESPONSE_MUSIC,
-  TVM_RESPONSE_BROWSE,
-  TVM_RESPONSE_PHOTOS,
-  TVM_RESPONSE_AUTORUN,
-  TVM_RESPONSE_BURN_DATA_CD,
-  TVM_RESPONSE_BURN_AUDIO_CD,
-};
+typedef void (*DeviceHandlerFunc) (TvmContext *context);
+typedef void (*DeviceHandlerCallback) (TvmContext *context);
 
-gint tvm_prompt (TvmContext  *context,
-                 const gchar *icon,
-                 const gchar *title,
-                 const gchar *primary_text,
-                 const gchar *secondary_text,
-                 const gchar *first_button_text,
-                 ...) G_GNUC_NULL_TERMINATED;
+void tvm_device_added(TvmContext *context);
+void tvm_device_handler_finished(TvmContext *context);
 
 G_END_DECLS
 
-#endif /* !__TVM_PROMPT_H__ */
+#endif /* !__TVM_DEVICE_H__ */
