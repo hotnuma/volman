@@ -4,6 +4,7 @@
 #include "tvmnotify.h"
 #include "printlog.h"
 #include <gtk/gtk.h>
+#include <libapp.h>
 
 static void _on_uevent(GUdevClient *client, const gchar *action,
                        GUdevDevice *device, void *param);
@@ -12,6 +13,12 @@ static const gchar *_subsystems[] = {"block", NULL};
 
 int main(int argc, char **argv)
 {
+    if (!app_isfirst(APPLOCK))
+    {
+        printinfo("Program is already running, abort...");
+        return EXIT_FAILURE;
+    }
+
     printinfo("Program started...");
 
     gtk_init(&argc, &argv);

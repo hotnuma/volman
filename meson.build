@@ -22,6 +22,7 @@ app_deps = [
     dependency('gtk+-3.0'),
     dependency('gudev-1.0'),
     dependency('libnotify'),
+    dependency('tinyc'),
 ]
 
 app_src = [

@@ -7,6 +7,7 @@ PKGCONFIG =
 
 PKGCONFIG += gtk+-3.0
 PKGCONFIG += gudev-1.0
+PKGCONFIG += tinyc
 
 HEADERS += \
     config.h \

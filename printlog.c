@@ -3,7 +3,7 @@
 
 void printinfo(const char * fmt, ...)
 {
-    openlog(APP_NAME, LOG_PID, LOG_USER);
+    openlog(APPNAME, LOG_PID, LOG_USER);
 
     va_list ap;
     va_start(ap, fmt);

@@ -9,9 +9,10 @@
 #include <glib/gi18n.h>
 #endif
 
-#define APP_NAME "volman"
-#define APP_DISPLAY_NAME "Volman"
-#define PACKAGE_NAME APP_NAME
+#define APPNAME "volman"
+#define APP_DISPLAYNAME "Volman"
+#define PACKAGE_NAME APPNAME
+#define APPLOCK "/tmp/" APPNAME ".pid"
 
 #ifndef UNUSED
 #define UNUSED(x) (void)(x)
