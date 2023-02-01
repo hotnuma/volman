@@ -20,25 +20,19 @@
 #include <config.h>
 #include <context.h>
 
-#include <glib.h>
-#include <gio/gio.h>
-#include <gudev/gudev.h>
 #include <device.h>
 
 TvmContext* tvm_context_new(GUdevClient *client, GUdevDevice *device)
 {
-    g_return_val_if_fail (G_UDEV_IS_CLIENT (client), NULL);
-    g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
+    g_return_val_if_fail(G_UDEV_IS_CLIENT(client), NULL);
+    g_return_val_if_fail(G_UDEV_IS_DEVICE(device), NULL);
 
     TvmContext *context = g_slice_new0(TvmContext);
 
-    context->client = g_object_ref (client);
-    context->device = g_object_ref (device);
+    context->client = g_object_ref(client);
+    context->device = g_object_ref(device);
     context->handlers = NULL;
-    context->monitor = g_volume_monitor_get ();
-
-    //context->error = NULL;
-
+    context->monitor = g_volume_monitor_get();
 
     return context;
 }
@@ -52,9 +46,6 @@ void tvm_context_free(TvmContext *context)
     g_list_free(context->handlers);
     g_object_unref(context->device);
     g_object_unref(context->client);
-
-    //if (context->error)
-    //    g_error_free(context->error);
 
     g_slice_free(TvmContext, context);
 }

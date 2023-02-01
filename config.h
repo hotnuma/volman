@@ -1,7 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <glib-object.h>
 #include <stdbool.h>
 
 #if defined(GETTEXT_PACKAGE)

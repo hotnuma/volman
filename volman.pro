@@ -18,7 +18,6 @@ HEADERS += \
 
 SOURCES = \
     0Temp.c \
-    0main.c \
     context.c \
     devblock.c \
     device.c \

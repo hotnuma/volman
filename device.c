@@ -36,15 +36,7 @@ struct _DeviceHandler
 
 static DeviceHandler subsystem_handlers[] =
 {
-    {"block",       device_block_added},
-
-#if 0
-    {"input",       tvm_input_device_added},
-    {"usb",         tvm_usb_device_added},
-    {"sound",       tvm_sound_device_added},
-    {"video4linux", tvm_video_device_added},
-#endif
-
+    {"block", device_block_added},
 };
 
 void device_added(TvmContext *context)
@@ -58,10 +50,9 @@ void device_added(TvmContext *context)
         g_debug("    %s = %s", keys[n], g_udev_device_get_property(context->device, keys[n]));
 #endif
 
-    /* determine the subsystem to which the device belongs */
     const gchar *subsystem = g_udev_device_get_subsystem(context->device);
 
-    /* find all subsystem handlers for this subsystem */
+    // find all subsystem handlers for this subsystem
     for (gint n = G_N_ELEMENTS(subsystem_handlers) - 1; n >= 0; --n)
     {
         if (g_strcmp0(subsystem, subsystem_handlers[n].subsystem) == 0)
@@ -83,7 +74,6 @@ void device_added(TvmContext *context)
     if (count != 1)
         printinfo("*** handlers count = %d", count);
 
-    /* try the next handler in the list */
     _device_next_handler(context);
 }
 
@@ -100,18 +90,6 @@ static void _device_next_handler(TvmContext *context)
 void device_cleanup(TvmContext *context)
 {
     g_return_if_fail(context != NULL);
-
-#if 0
-    if (context->error != NULL)
-    {
-        g_list_free(context->handlers);
-    }
-    else
-    {
-        if (context->handlers != NULL)
-            _device_next_handler(context);
-    }
-#endif
 
     tvm_context_free(context);
 }

@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include <tvmnotify.h>
+
 #include <libnotify/notify.h>
 
 static gboolean tvm_notify_initted = FALSE;
@@ -28,17 +29,17 @@ void tvm_notify(const gchar *icon, const gchar *summary, const gchar *message)
     NotifyNotification *notification;
     gchar              *spec_version = NULL;
 
-    if (G_UNLIKELY (!tvm_notify_initted))
+    if (G_UNLIKELY(!tvm_notify_initted))
     {
-        if (notify_init (PACKAGE_NAME))
+        if (notify_init(PACKAGE_NAME))
         {
             /* we do this to work around bugs in libnotify < 0.6.0. Older
              * versions crash in notify_uninit() when no notifications are
              * displayed before. These versions also segfault when the
              * ret_spec_version parameter of notify_get_server_info is
              * NULL... */
-            notify_get_server_info (NULL, NULL, NULL, &spec_version);
-            g_free (spec_version);
+            notify_get_server_info(NULL, NULL, NULL, &spec_version);
+            g_free(spec_version);
 
             tvm_notify_initted = TRUE;
         }
@@ -58,44 +59,44 @@ void tvm_notify(const gchar *icon, const gchar *summary, const gchar *message)
 #else
     notification = notify_notification_new(summary, message, icon, NULL);
 #endif
-    /* don't log notification (yes, the logic seems inverted but it's right) */
+
+    // don't log notification (yes, the logic seems inverted but it's right)
     notify_notification_set_hint(notification, "transient", g_variant_new_boolean (FALSE));
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
     notify_notification_set_timeout(notification, NOTIFY_EXPIRES_DEFAULT);
     notify_notification_show(notification, NULL);
+
     g_object_unref(notification);
 }
 
-gchar*
-tvm_notify_decode (const gchar *str)
+gchar* tvm_notify_decode(const gchar *str)
 {
-    GString     *string;
-    const gchar *p;
-    gchar       *result;
-    gchar        decoded_c;
-
     if (str == NULL)
         return NULL;
 
     if (!g_utf8_validate (str, -1, NULL))
         return NULL;
 
-    string = g_string_new (NULL);
+    GString *string = g_string_new(NULL);
 
-    for (p = str; p != NULL && *p != '\0'; ++p)
+    for (const gchar *p = str; p != NULL && *p != '\0'; ++p)
     {
-        if (*p == '\\' && p[1] == 'x' && g_ascii_isalnum (p[2]) && g_ascii_isalnum (p[3]))
+        if (*p == '\\' && p[1] == 'x' && g_ascii_isalnum(p[2]) && g_ascii_isalnum(p[3]))
         {
-            decoded_c = (g_ascii_xdigit_value (p[2]) << 4) | g_ascii_xdigit_value (p[3]);
-            g_string_append_c (string, decoded_c);
+            gchar decoded_c =
+                (g_ascii_xdigit_value(p[2]) << 4) | g_ascii_xdigit_value(p[3]);
+
+            g_string_append_c(string, decoded_c);
             p = p + 3;
         }
         else
-            g_string_append_c (string, *p);
+        {
+            g_string_append_c(string, *p);
+        }
     }
 
-    result = string->str;
-    g_string_free (string, FALSE);
+    gchar *result = string->str;
+    g_string_free(string, FALSE);
 
     return result;
 }

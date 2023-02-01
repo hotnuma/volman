@@ -20,10 +20,8 @@
 #ifndef __TVM_CONTEXT_H__
 #define __TVM_CONTEXT_H__
 
-#include <gio/gio.h>
 #include <gudev/gudev.h>
-
-G_BEGIN_DECLS
+#include <gio/gio.h>
 
 typedef struct _TvmContext TvmContext;
 
@@ -32,7 +30,6 @@ struct _TvmContext
     GVolumeMonitor *monitor;
     GUdevClient    *client;
     GUdevDevice    *device;
-    //GError         *error;
     GList          *handlers;
 };
 
@@ -41,8 +38,6 @@ TvmContext* tvm_context_new(GUdevClient *client, GUdevDevice *device)
 void        tvm_context_free(TvmContext *context);
 gboolean    tvm_context_run(gpointer user_data);
 
-G_END_DECLS
-
-#endif /* !__TVM_CONTEXT_H__ */
+#endif // __TVM_CONTEXT_H__
 
 

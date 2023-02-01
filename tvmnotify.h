@@ -22,17 +22,10 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
+void    tvm_notify(const gchar *icon, const gchar *summary, const gchar *message);
+gchar*  tvm_notify_decode(const gchar *str);
+void    tvm_notify_uninit();
 
-void   tvm_notify        (const gchar *icon,
-                          const gchar *summary,
-                          const gchar *message);
+#endif // __TVM_NOTIFY_H__
 
-gchar *tvm_notify_decode (const gchar *str);
-
-void   tvm_notify_uninit (void);
-
-G_END_DECLS
-
-#endif /* !__TVM_NOTIFY_H__ */
 

@@ -46,7 +46,6 @@ static void _on_uevent(GUdevClient *client, const gchar *action,
     UNUSED(param);
 
     const gchar *devtype = g_udev_device_get_devtype(device);
-    const gchar *devfile = g_udev_device_get_device_file(device);
 
     if (strcmp(action, "add") != 0
         || strcmp(devtype, "partition") != 0)
@@ -55,6 +54,7 @@ static void _on_uevent(GUdevClient *client, const gchar *action,
         return;
     }
 
+    const gchar *devfile = g_udev_device_get_device_file(device);
     printinfo("%s : mount %s", action, devfile);
 
     TvmContext *context = tvm_context_new(client, device);

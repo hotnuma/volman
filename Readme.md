@@ -1,4 +1,4 @@
 
-Sample Gtk Programs
+Simple Automount Program
 
 

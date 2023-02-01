@@ -20,11 +20,7 @@
 #ifndef __TVM_DEVICE_H__
 #define __TVM_DEVICE_H__
 
-#include <glib.h>
-
 #include <context.h>
-
-G_BEGIN_DECLS
 
 typedef void (*DeviceHandlerFunc) (TvmContext *context);
 typedef void (*DeviceHandlerCallback) (TvmContext *context);
@@ -32,6 +28,6 @@ typedef void (*DeviceHandlerCallback) (TvmContext *context);
 void device_added(TvmContext *context);
 void device_cleanup(TvmContext *context);
 
-G_END_DECLS
+#endif // __TVM_DEVICE_H__
 
-#endif /* !__TVM_DEVICE_H__ */
+

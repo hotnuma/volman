@@ -119,7 +119,7 @@ GVolume* _volume_monitor_get_volume_for_kind(GVolumeMonitor *monitor,
     g_return_val_if_fail(kind != NULL && *kind != '\0', NULL);
     g_return_val_if_fail(identifier != NULL && *identifier != '\0', NULL);
 
-    GList *volumes = g_volume_monitor_get_volumes (monitor);
+    GList *volumes = g_volume_monitor_get_volumes(monitor);
 
     GVolume *volume = NULL;
 
@@ -146,31 +146,31 @@ GVolume* _volume_monitor_get_volume_for_kind(GVolumeMonitor *monitor,
 static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
                                    TvmContext *context)
 {
-    g_return_if_fail(G_IS_VOLUME (volume));
-    g_return_if_fail(G_IS_ASYNC_RESULT (result));
+    g_return_if_fail(G_IS_VOLUME(volume));
+    g_return_if_fail(G_IS_ASYNC_RESULT(result));
     g_return_if_fail(context != NULL);
 
     GError *error = NULL;
 
     /* finish mounting the volume */
-    if (g_volume_mount_finish (volume, result, &error))
+    if (g_volume_mount_finish(volume, result, &error))
     {
         /* get the moint point of the volume */
-        GMount *mount = g_volume_get_mount (volume);
+        GMount *mount = g_volume_get_mount(volume);
 
         if (mount != NULL)
         {
             /* inspect volume contents and perform actions based on them */
-            _devblock_notify (context, mount, &error);
+            _devblock_notify(context, mount, &error);
 
             /* release the mount point */
-            g_object_unref (mount);
+            g_object_unref(mount);
         }
         else
         {
             /* could not locate the mount point */
             g_set_error(&error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                         _("Unable to locate mount point"));
+                        _("Unable to locate mount point"));
         }
     }
 
@@ -182,32 +182,34 @@ static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
 
 static void _devblock_notify(TvmContext *context, GMount *mount, GError **error)
 {
-    g_return_if_fail (context != NULL);
-    g_return_if_fail (G_IS_MOUNT (mount));
-    g_return_if_fail (error == NULL || *error == NULL);
+    g_return_if_fail(context != NULL);
+    g_return_if_fail(G_IS_MOUNT (mount));
+    g_return_if_fail(error == NULL || *error == NULL);
 
     const gchar *icon = "drive-optical";
+
     const gchar *summary;
     gchar *message;
 
-    /* distinguish between CDs, DVDs, Blu-rays */
-    if (g_udev_device_get_property_as_boolean (context->device, "ID_CDROM_MEDIA_CD"))
+    // CD
+    if (g_udev_device_get_property_as_boolean(context->device, "ID_CDROM_MEDIA_CD"))
     {
-        /* generate notification info */
         summary = _("CD mounted");
-        message = g_strdup (_("The CD was mounted automatically"));
+        message = g_strdup(_("The CD was mounted automatically"));
     }
-    else if (g_udev_device_get_property_as_boolean (context->device, "ID_CDROM_MEDIA_DVD"))
+
+    // DVD
+    else if (g_udev_device_get_property_as_boolean(context->device, "ID_CDROM_MEDIA_DVD"))
     {
-        /* generate notification info */
         summary = _("DVD mounted");
-        message = g_strdup (_("The DVD was mounted automatically"));
+        message = g_strdup(_("The DVD was mounted automatically"));
     }
-    else if (g_udev_device_get_property_as_boolean (context->device, "ID_CDROM_MEDIA_BD"))
+
+    // Blu-ray
+    else if (g_udev_device_get_property_as_boolean(context->device, "ID_CDROM_MEDIA_BD"))
     {
-        /* generate notification info */
         summary = _("Blu-ray mounted");
-        message = g_strdup (_("The Blu-ray was mounted automatically"));
+        message = g_strdup(_("The Blu-ray was mounted automatically"));
     }
     else
     {
@@ -229,13 +231,12 @@ static void _devblock_notify(TvmContext *context, GMount *mount, GError **error)
             message = g_strdup_printf(_("The inserted volume was mounted automatically"));
         }
 
-        g_free (decoded_name);
+        g_free(decoded_name);
     }
 
-    /* display the notification */
+    // show the notification
     tvm_notify(icon, summary, message);
 
-    /* clean up */
     g_free(message);
 }
 
