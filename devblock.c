@@ -150,31 +150,30 @@ static void _devblock_mount_finish(GVolume *volume, GAsyncResult *result,
     g_return_if_fail(G_IS_ASYNC_RESULT(result));
     g_return_if_fail(context != NULL);
 
-    GError *error = NULL;
+    //GError *error = NULL;
 
     /* finish mounting the volume */
-    if (g_volume_mount_finish(volume, result, &error))
+    if (g_volume_mount_finish(volume, result, NULL /*&error*/))
     {
         /* get the moint point of the volume */
         GMount *mount = g_volume_get_mount(volume);
 
         if (mount != NULL)
         {
-            /* inspect volume contents and perform actions based on them */
-            _devblock_notify(context, mount, &error);
+            _devblock_notify(context, mount, NULL /*&error*/);
 
-            /* release the mount point */
             g_object_unref(mount);
         }
         else
         {
             /* could not locate the mount point */
-            g_set_error(&error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                        _("Unable to locate mount point"));
+            //g_set_error(&error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+            //            _("Unable to locate mount point"));
+
+            printinfo("Unable to locate mount point");
         }
     }
 
-    /* release the volume */
     g_object_unref(volume);
 
     device_cleanup(context);
